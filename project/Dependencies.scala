@@ -7,7 +7,7 @@ object Dependencies:
 
     val cats            = "2.13.0"
     val catsEffect      = "3.7.1"
-    val munit           = "1.3.3"
+    val munit           = "1.3.6"
     val munitCatsEffect = "2.2.1"
 
   lazy val cats = libraryDependencies ++= Seq(
