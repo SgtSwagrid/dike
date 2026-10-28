@@ -10,42 +10,34 @@ final class ComparisonSuite extends FunSuite:
     assertEquals(Verdict.Second.reversed, Verdict.First)
     assertEquals(Verdict.Tie.reversed, Verdict.Tie)
 
-  test("a won judgement counts half a comparison to its winner"):
+  test("a won judgement counts half a comparison, a drawn one a quarter each"):
     assertEquals(
       Comparison.outcomes(Verdict.Second, (3, 5)),
       List(Outcome(5, 3, 0.5)),
     )
-
-  test("a drawn judgement counts a quarter of a comparison to each"):
     assertEquals(
       Comparison.outcomes(Verdict.Tie, (3, 5)),
       List(Outcome(3, 5, 0.25), Outcome(5, 3, 0.25)),
     )
 
-  test("agreeing judgements reach their verdict"):
-    val comparison = Comparison.of(
-      List(
-        Right(Verdict.First),
-        Right(Verdict.First),
-      ),
-      (0, 1),
-    )
+  test("agreeing judgements reach their verdict, contradictory ones none"):
+    val verdict = (first: Verdict, second: Verdict) =>
+      Comparison
+        .of(
+          List(Right(first), Right(second)),
+          (0, 1),
+        )
+        .verdict
     assertEquals(
-      comparison.verdict,
+      verdict(Verdict.First, Verdict.First),
       Some(Verdict.First),
     )
-
-  test("contradictory judgements reach no verdict"):
-    val comparison = Comparison.of(
-      List(
-        Right(Verdict.First),
-        Right(Verdict.Second),
-      ),
-      (0, 1),
+    assertEquals(
+      verdict(Verdict.First, Verdict.Second),
+      None,
     )
-    assertEquals(comparison.verdict, None)
 
-  test("the one judgement that did not fail reaches the verdict"):
+  test("a failed judgement is left out of the verdict"):
     val failure    = RuntimeException("No verdict.")
     val comparison = Comparison.of(
       List(Left(failure), Right(Verdict.Second)),
@@ -62,9 +54,6 @@ final class ComparisonSuite extends FunSuite:
         Right(List(Outcome(1, 0, 0.5))),
       ),
     )
-
-  test("a pairing whose every judgement failed reaches no verdict"):
-    val failure = RuntimeException("No verdict.")
     assertEquals(
       Comparison
         .of(

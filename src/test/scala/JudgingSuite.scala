@@ -4,23 +4,25 @@ import munit.FunSuite
 
 final class JudgingSuite extends FunSuite:
 
-  test("beating a rung leaves only the rungs above it to search"):
-    val left = Judging.narrowed(0 until 7, 3, Some(Verdict.First))
-    assertEquals(left.toList, List(4, 5, 6))
+  test("a won or lost rung leaves only the rungs beyond it, within the range"):
+    val narrowed = (rungs: Range, verdict: Verdict) =>
+      Judging.narrowed(rungs, 3, Some(verdict)).toList
+    assertEquals(
+      narrowed(0 until 7, Verdict.First),
+      List(4, 5, 6),
+    )
+    assertEquals(
+      narrowed(0 until 7, Verdict.Second),
+      List(0, 1, 2),
+    )
+    assertEquals(
+      narrowed(2 until 5, Verdict.Second),
+      List(2),
+    )
 
-  test("losing to a rung leaves only the rungs below it to search"):
-    val left = Judging.narrowed(0 until 7, 3, Some(Verdict.Second))
-    assertEquals(left.toList, List(0, 1, 2))
-
-  test("a drawn or contradictory verdict ends the climb"):
+  test("a draw, a contradiction or the end of the ladder ends the climb"):
     assert(Judging.narrowed(0 until 7, 3, Some(Verdict.Tie)).isEmpty)
     assert(Judging.narrowed(0 until 7, 3, None).isEmpty)
-
-  test("a climb narrows to nothing at the ends of the ladder"):
     val only = 0 until 1
     assert(Judging.narrowed(only, 0, Some(Verdict.First)).isEmpty)
     assert(Judging.narrowed(only, 0, Some(Verdict.Second)).isEmpty)
-
-  test("a climb searches within the range it is left, never beyond it"):
-    val left = Judging.narrowed(2 until 5, 3, Some(Verdict.Second))
-    assertEquals(left.toList, List(2))
