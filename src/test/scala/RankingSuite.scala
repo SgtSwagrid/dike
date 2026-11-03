@@ -6,12 +6,7 @@ import munit.FunSuite
 
 final class RankingSuite extends FunSuite:
 
-  test("the stronger of two items is ranked and scored above the weaker"):
-    val ranked = rank(2, beat(0, 1)).ranked
-    assertEquals(ranked.map(_.item), Vector("0", "1"))
-    assert(ranked.head.score > ranked.last.score)
-
-  test("ratings keep the order the items were given in"):
+  test("ratings keep the items' order, and the stronger ranks above"):
     val ranking = rank(2, beat(1, 0))
     assertEquals(
       ranking.ratings.map(_.item),
@@ -21,16 +16,15 @@ final class RankingSuite extends FunSuite:
       ranking.ranked.map(_.item),
       Vector("1", "0"),
     )
+    assert(ranking.ranked.head.score > ranking.ranked.last.score)
 
-  test("agreeing judgements amount to one comparison won"):
+  test("agreeing judgements make a comparison won, contradictory a draw"):
     assertEqualsDouble(
       rank(2, beat(0, 1)).ratings(0).wins,
       1.0,
       1e-9,
     )
-
-  test("contradictory judgements amount to a draw"):
-    val ranking = rank(
+    val drawn = rank(
       2,
       List(
         List(Outcome(0, 1, 0.5)),
@@ -38,41 +32,29 @@ final class RankingSuite extends FunSuite:
       ),
     )
     assertEquals(
-      ranking.ratings.map(_.wins),
+      drawn.ratings.map(_.wins),
       Vector(0.5, 0.5),
     )
     assertEquals(
-      ranking.ratings.map(_.score).distinct.size,
+      drawn.ratings.map(_.score).distinct.size,
       1,
     )
 
-  test("every judgement made is counted, however it was split"):
-    val tied = List(Outcome(0, 1, 0.25), Outcome(1, 0, 0.25))
-    assertEquals(
-      rank(2, List(tied, List(Outcome(0, 1, 0.5)))).judgements,
-      2,
-    )
-
-  test("failed judgements are reported, and not counted"):
+  test("every judgement is counted, however split, and failures reported"):
     val failure = RuntimeException("No verdict.")
+    val tied    = List(Outcome(0, 1, 0.25), Outcome(1, 0, 0.25))
     val ranking = fitted(
       contest(2),
       List(
         Left(failure),
+        Right(tied),
         Right(List(Outcome(0, 1, 0.5))),
       ),
     )
     assertEquals(ranking.failures, List(failure))
-    assertEquals(ranking.judgements, 1)
+    assertEquals(ranking.judgements, 2)
 
-  test("an uncalibrated ranking is scored from the contest's curve"):
-    val ranking = rank(2, beat(0, 1), curve = Curve(50, 0))
-    assertEquals(
-      ranking.ratings.map(_.score),
-      Vector(50.0, 50.0),
-    )
-
-  test("an uncalibrated ranking scores each item by its standing"):
+  test("an uncalibrated ranking scores items by their standing on the curve"):
     // Of two items, the stronger stands at the third quartile.
     val ranking = rank(2, beat(0, 1))
     assertEqualsDouble(
@@ -85,57 +67,54 @@ final class RankingSuite extends FunSuite:
       -0.6744898,
       1e-6,
     )
-
-  test("every item is rated, compared or not"):
-    val ranking = rank(3, List(List(Outcome(0, 1, 0.5))))
     assertEquals(
-      ranking.ratings.map(_.item),
-      Vector("0", "1", "2"),
+      rank(2, beat(0, 1), curve = Curve(50, 0)).ratings.map(_.score),
+      Vector(50.0, 50.0),
     )
 
-  test("an item between two anchors is scored between their scores"):
+  test("every item is rated, compared or not, but never an anchor"):
+    assertEquals(
+      rank(3, List(List(Outcome(0, 1, 0.5)))).ratings.map(_.item),
+      Vector("0", "1", "2"),
+    )
+    assertEquals(
+      rank(1, beat(0, 1), anchors = ladder(40, 80)).ratings.map(_.item),
+      Vector("0"),
+    )
+
+  test("items are scored off the anchors they are placed among"):
     // The anchors scored 40 and 80 are players 2 and 3.
-    val ranking = rank(
+    val between = rank(
       2,
       beat(0, 2) ++ beat(3, 0),
       anchors = ladder(40, 80),
-    )
-    val score = ranking.ratings(0).score
-    assert(score > 40 && score < 80, score)
-
-  test("items that all beat the anchors are all scored above them"):
+    ).ratings(0).score
+    assert(between > 40 && between < 80, between)
     val swept = beat(3, 2) ++ (0 until 2)
       .toList
       .flatMap(item => beat(item, 2) ++ beat(item, 3))
-    val ranking = rank(2, swept, anchors = ladder(40, 60))
+    val above = rank(2, swept, anchors = ladder(40, 60))
     assert(
-      ranking.ratings.forall(_.score > 60),
-      ranking.ratings,
+      above.ratings.forall(_.score > 60),
+      above.ratings,
     )
 
-  test("anchors ranked as they are scored are reported in full agreement"):
-    val ranking = rank(1, beat(2, 1), anchors = ladder(40, 80))
-    assertEquals(ranking.agreement, Some(1.0))
-
-  test("anchors ranked against their scores are reported in disagreement"):
-    // The anchor scored 40 (player 1) beats the one scored 80 (player 2).
-    val ranking = rank(1, beat(1, 2), anchors = ladder(40, 80))
-    assertEquals(ranking.agreement, Some(0.0))
-
-  test("anchors stand on the ladder in score order, however they are given"):
-    // Given highest first, the anchor scored 40 is still player 1.
-    val ranking = rank(1, beat(2, 1), anchors = ladder(80, 40))
-    assertEquals(ranking.agreement, Some(1.0))
-
-  test("a ranking with no anchors reports no agreement"):
-    assertEquals(rank(2, beat(0, 1)).agreement, None)
-
-  test("only the items are rated, never the anchors they were placed against"):
-    val ranking = rank(1, beat(0, 1), anchors = ladder(40, 80))
+  test("agreement reports whether the anchors rank as they are scored"):
     assertEquals(
-      ranking.ratings.map(_.item),
-      Vector("0"),
+      rank(1, beat(2, 1), anchors = ladder(40, 80)).agreement,
+      Some(1.0),
     )
+    // The anchor scored 40 (player 1) beats the one scored 80 (player 2).
+    assertEquals(
+      rank(1, beat(1, 2), anchors = ladder(40, 80)).agreement,
+      Some(0.0),
+    )
+    // Given highest first, the anchor scored 40 is still player 1.
+    assertEquals(
+      rank(1, beat(2, 1), anchors = ladder(80, 40)).agreement,
+      Some(1.0),
+    )
+    assertEquals(rank(2, beat(0, 1)).agreement, None)
 
 object RankingSuite:
 

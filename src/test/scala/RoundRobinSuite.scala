@@ -4,45 +4,37 @@ import munit.FunSuite
 
 final class RoundRobinSuite extends FunSuite:
 
-  test("a full round-robin plays every pairing exactly once"):
-    val played = RoundRobin.pairings(6, 5).map((a, b) => (a.min(b), a.max(b)))
-    assertEquals(played.size, 15)
-    assertEquals(played.distinct.size, 15)
+  private def played(players: Int, rounds: Int): Seq[(Int, Int)] = RoundRobin
+    .pairings(players, rounds)
+    .map((a, b) => (a.min(b), a.max(b)))
 
-  test("rounds beyond a full round-robin are not scheduled"):
+  test("a full round-robin plays every pairing exactly once, and no more"):
+    assertEquals(played(6, 5).size, 15)
+    assertEquals(played(6, 5).distinct.size, 15)
+    assertEquals(played(5, 5).size, 10)
+    assertEquals(played(5, 5).distinct.size, 10)
     assertEquals(
       RoundRobin.pairings(4, 99).toList,
       RoundRobin.pairings(4, 3).toList,
     )
 
-  test("every player is paired exactly once per round"):
-    val round = RoundRobin.pairings(8, 1)
-    assertEquals(round.size, 4)
-    val seated = round.flatMap((a, b) => Seq(a, b)).sorted.toList
-    assertEquals(seated, (0 until 8).toList)
-
-  test("an odd field sits one player out of each round"):
-    val round = RoundRobin.pairings(5, 1)
-    assertEquals(round.size, 2)
+  test("every player is paired once per round, but one in an odd field"):
+    val rounds = RoundRobin.pairings(8, 3).grouped(4).toList
+    assertEquals(rounds.size, 3)
+    rounds.foreach(round =>
+      assertEquals(
+        round.flatMap((a, b) => Seq(a, b)).sorted.toList,
+        (0 until 8).toList,
+      ),
+    )
+    val odd = RoundRobin.pairings(5, 1)
+    assertEquals(odd.size, 2)
     assertEquals(
-      round.flatMap((a, b) => Seq(a, b)).distinct.size,
+      odd.flatMap((a, b) => Seq(a, b)).distinct.size,
       4,
     )
 
-  test("an odd field still plays every pairing over a full round-robin"):
-    val played = RoundRobin.pairings(5, 5).map((a, b) => (a.min(b), a.max(b)))
-    assertEquals(played.distinct.size, 10)
-
-  test("every player is compared equally often over several rounds"):
-    val appearances = RoundRobin
-      .pairings(6, 3)
-      .flatMap((a, b) => Seq(a, b))
-      .groupMapReduce(identity)(_ => 1)(_ + _)
-    assertEquals(appearances.values.toSet, Set(3))
-
-  test("a field too small to pair is not scheduled"):
+  test("a field too small to pair, or no rounds, schedules nothing"):
     assert(RoundRobin.pairings(1, 3).isEmpty)
     assert(RoundRobin.pairings(0, 3).isEmpty)
-
-  test("no rounds are scheduled when none are asked for"):
     assert(RoundRobin.pairings(4, 0).isEmpty)

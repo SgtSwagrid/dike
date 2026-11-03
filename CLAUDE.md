@@ -11,7 +11,7 @@ Keep it concise and actionable.
 
 ## Project overview
 
-This is Dike, a Scala 3 library for ranking items by judging them in pairs, built on Cats alone. It is in beta.
+This is Dike, a Scala 3 library for ranking items by judging them in pairs, built on Cats alone. It is still a prototype.
 
 It is a single JVM module in `com.alecdorrington.dike`. A `Contest` (items, `Anchor`s of known score, round-robin
 `rounds`, and the `Curve` to fall back on) is run by `Contest.rank` with a `Judge[F, A]`, `(A, A) => F[Verdict]`, for

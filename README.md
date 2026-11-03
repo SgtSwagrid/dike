@@ -11,7 +11,7 @@
 </div>
 
 > [!WARNING]
-> Dike is in beta. It is young, it has one user, and anything may change between minor versions.
+> Dike is still a prototype. Anything could be broken or change between minor versions.
 
 Ask a judge what something is worth and the answer drifts. Ask it which of two things is the better and the answer holds.
 This is as true of a large language model as of a person, so a ranking fitted from many such judgements is far
@@ -25,13 +25,12 @@ Named for [Dike](https://en.wikipedia.org/wiki/Dike_(mythology)), goddess of jus
 
 ## ⬇️ Installation
 
-Add the following to your `build.sbt`:
+The following applies for [Scala 3](https://www.scala-lang.org/) projects built with [sbt 2](https://www.scala-sbt.org/).
+Add the library to your `build.sbt` file, with the desired version number (e.g. [latest](https://github.com/SgtSwagrid/dike/releases/latest)):
 
 ```scala
-libraryDependencies += "com.alecdorrington" %% "dike" % "0.1.0"
+libraryDependencies += "com.alecdorrington" %% "dike" % "{version}"
 ```
-
-Compiled with Scala `3.9.0`, with no intention to explicitly support older versions. JVM only.
 
 ## 🚀 Usage
 
