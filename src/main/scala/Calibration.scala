@@ -2,9 +2,8 @@ package com.alecdorrington.dike
 
 /**
   * Calibration of a fitted ability scale against reference points of known
-  * score. An ability is scored by reading off the line between the reference
-  * points it falls among, so scores follow from what the references are worth,
-  * not from an assumed distribution.
+  * score, read off the line between those an ability falls among, so that
+  * scores assume no distribution.
   */
 object Calibration:
 
@@ -20,8 +19,8 @@ object Calibration:
   final case class Knot(ability: Double, score: Double)
 
   /**
-    * Scores an ability on the line between the two reference points it falls
-    * between, or on the line through the nearest two when it falls beyond them.
+    * Scores an ability on the line through the two reference points it falls
+    * between, or the nearest two when it falls beyond them.
     *
     * @param knots
     *   The reference points, in any order. Those of equal ability count as one
@@ -76,10 +75,7 @@ object Calibration:
     .toSeq
     .sortBy(_.ability)
 
-  /**
-    * The two reference points either side of the ability, or the nearest pair
-    * when it lies beyond them all.
-    */
+  /** The two points either side of the ability, else the nearest two. */
   private def bracket(knots: Seq[Knot], ability: Double): (Knot, Knot) =
     val above = knots.indexWhere(_.ability > ability)
     val upper = if above < 0 then knots.size - 1 else above.max(1)

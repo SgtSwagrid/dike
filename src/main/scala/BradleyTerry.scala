@@ -3,14 +3,13 @@ package com.alecdorrington.dike
 /**
   * The Bradley-Terry model, which gives every player an ability such that a
   * player of log-ability `a` beats one of `b` with probability
-  * `1 / (1 + exp(b - a))`. It is the Elo model, fitted from every comparison at
-  * once.
+  * `1 / (1 + exp(b - a))`: the Elo model, fitted from every comparison at once.
   *
   * Abilities are fitted by maximum likelihood with Hunter's (2004)
-  * minorisation-maximisation algorithm, which converges from any start. A weak
-  * prior of imagined draws against an average opponent keeps the fit finite for
-  * players who won or lost everything, and keeps players in disconnected parts
-  * of the comparison graph comparable.
+  * minorisation-maximisation algorithm. A weak prior of imagined draws against
+  * an average opponent keeps the fit finite for players who won or lost
+  * everything, and players in disconnected parts of the comparison graph
+  * comparable.
   */
 object BradleyTerry:
 
@@ -24,8 +23,7 @@ object BradleyTerry:
     *   The index of the player that lost.
     *
     * @param weight
-    *   The share of a comparison this outcome counts for, as when a draw is
-    *   split between the players.
+    *   The share of a comparison this outcome counts for.
     */
   final case class Outcome
     (
@@ -45,10 +43,10 @@ object BradleyTerry:
     *   twice, are ignored. A draw is two half-weighted outcomes, one each way.
     *
     * @return
-    *   A log-ability per player, in player order. `0` is the prior's average
-    *   opponent, and the ability of a player with no comparisons. Abilities are
-    *   not centred on the players, so fits against the same reference players
-    *   share a scale.
+    *   A log-ability per player, in player order, where `0` is the prior's
+    *   average opponent and any player with no comparisons. They are not
+    *   centred on the players, so fits against the same reference players share
+    *   a scale.
     */
   def abilities(players: Int, outcomes: Seq[Outcome]): Vector[Double] =
     val judged = outcomes.filter(valid(_, players))
@@ -59,8 +57,7 @@ object BradleyTerry:
 
   /**
     * Converts a log-ability to the Elo scale, on which the prior's average
-    * opponent is `1500` and a lead of `400` points means winning nine
-    * comparisons in ten.
+    * opponent is `1500` and a lead of `400` points means odds of ten to one.
     *
     * @param ability
     *   The log-ability, as given by [[abilities]].
@@ -79,7 +76,7 @@ object BradleyTerry:
     val won = outcomes.groupMapReduce(_.winner)(_.weight)(_ + _)
     Vector.tabulate(players)(won.getOrElse(_, 0.0))
 
-  /** Each player's opponents in order, with their total weight: only those met. */
+  /** Each player's opponents met, in index order, with their total weight. */
   private type Meetings = Vector[Vector[(Int, Double)]]
 
   private def meetings(players: Int, outcomes: Seq[Outcome]): Meetings =
@@ -112,8 +109,8 @@ object BradleyTerry:
   )
 
   /**
-    * The wins a player is expected to take at the current strengths, including
-    * against the prior's average opponent, of strength `1`.
+    * The wins a player is expected to take at the current strengths, the
+    * prior's average opponent, of strength `1`, included.
     */
   private def expected
     (
@@ -125,7 +122,10 @@ object BradleyTerry:
     .map((other, weight) => weight / (strengths(player) + strengths(other)))
     .sum + 2 * prior / (strengths(player) + 1)
 
-  /** The draws every player is imagined to have had against the prior. */
+  /**
+    * The wins each player is credited from one imagined draw against the
+    * prior's average opponent.
+    */
   private val prior = 0.5
 
   private val steps = 1000

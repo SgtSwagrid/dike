@@ -12,14 +12,14 @@ import com.alecdorrington.dike.BradleyTerry.Outcome
   *   The rating of each item, in the order the items were given.
   *
   * @param judgements
-  *   The number of judgements the ranking was fitted from, fewer than asked for
-  *   when some failed. Two judgements make one comparison.
+  *   The number of judgements that succeeded and were fitted, two to a
+  *   comparison.
   *
   * @param agreement
   *   The agreement, from `0` to `1`, of the anchors' scores with the order the
   *   comparisons put them in (see [[Calibration.agreement]]), or `None` with
-  *   too few anchors to tell. A low value means the anchors are inconsistent or
-  *   the judge measures something else, so the scores should not be trusted.
+  *   too few anchors to tell; a low value means the scores should not be
+  *   trusted.
   *
   * @param failures
   *   The error of every judgement that failed, and so was left out.
@@ -32,7 +32,12 @@ final case class Ranking[+A]
     failures: List[Throwable],
   ):
 
-  /** The ratings, strongest first. */
+  /**
+    * Orders the ratings by fitted ability.
+    *
+    * @return
+    *   The ratings, strongest first.
+    */
   def ranked: Vector[Rating[A]] = ratings.sortBy(-_.elo)
 
 /**
@@ -49,8 +54,8 @@ final case class Ranking[+A]
   *   too few anchors, off the contest's curve by its standing among the items.
   *
   * @param elo
-  *   The fitted ability on the Elo scale (see [[BradleyTerry.elo]]), which does
-  *   not depend on the curve. Contests against the same anchors share it.
+  *   The fitted ability on the Elo scale (see [[BradleyTerry.elo]]), shared by
+  *   contests against the same anchors.
   *
   * @param wins
   *   The number of comparisons won, a judgement won counting `0.5` and a
@@ -75,7 +80,7 @@ object Ranking:
     val (failures, succeeded) = judgements.partitionMap(identity)
     val fit                   = Fit(field, succeeded.flatten)
     Ranking(
-      Vector.tabulate(field.items)(fit.rating),
+      Vector.tabulate(field.itemCount)(fit.rating),
       succeeded.size,
       Calibration.agreement(fit.knots),
       failures,
@@ -85,7 +90,7 @@ object Ranking:
 
     private val abilities = BradleyTerry.abilities(field.players.size, outcomes)
 
-    private val items = abilities.take(field.items)
+    private val itemAbilities = abilities.take(field.itemCount)
 
     private val won = BradleyTerry.wins(field.players.size, outcomes)
 
@@ -101,7 +106,7 @@ object Ranking:
     private def score(item: Int): Double = Calibration
       .score(knots, abilities(item))
       .getOrElse(Curving.normalised(
-        items,
+        itemAbilities,
         abilities(item),
         field.contest.curve,
       ))

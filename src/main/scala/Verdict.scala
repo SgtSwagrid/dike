@@ -12,7 +12,12 @@ enum Verdict:
   /** Neither item is the better. */
   case Tie
 
-  /** This verdict restated for the two items presented the other way round. */
+  /**
+    * Restates this verdict for the two items presented the other way round.
+    *
+    * @return
+    *   The verdict with `First` and `Second` swapped.
+    */
   def reversed: Verdict = this match
     case First  => Second
     case Second => First

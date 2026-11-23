@@ -38,7 +38,7 @@ object RoundRobin:
       .filterNot((a, b) => a == bye || b == bye)
 
   private def rotated(seats: Vector[Int], places: Int): Vector[Int] =
-    val (front, back) = seats.splitAt(places % seats.size.max(1))
+    val (front, back) = seats.splitAt(places % seats.size)
     back ++ front
 
   /** The seat an odd player out is paired with, meaning no game. */

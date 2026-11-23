@@ -6,11 +6,11 @@ import com.alecdorrington.dike.BradleyTerry.Outcome
 private[dike] type Judgement = Either[Throwable, List[Outcome]]
 
 /**
-  * One pairing judged both ways round, to cancel any preference of the judge
-  * for whichever it saw first.
+  * One pairing judged both ways round, to cancel the judge's preference for
+  * whichever it saw first.
   *
   * @param verdict
-  *   The verdict every judgement reached, when they agreed.
+  *   The verdict the judgements that succeeded agreed on, if they did.
   */
 private[dike] final case class Comparison
   (
@@ -26,11 +26,8 @@ private[dike] object Comparison:
   val sides: Int = 2
 
   /**
-    * Gathers a pairing's judgements with the verdict they agreed on.
-    *
-    * @param verdicts
-    *   The verdict of each judgement, stated for the pairing in the order
-    *   given.
+    * Gathers a pairing's judgements, each verdict stated for the pairing in the
+    * order given.
     */
   def of
     (
@@ -42,7 +39,7 @@ private[dike] object Comparison:
     agreed(verdicts.flatMap(_.toOption)),
   )
 
-  /** Contradictory judgements agree on nothing: the players are too alike. */
+  /** Contradictory judgements agree on nothing, as the players are too alike. */
   private def agreed(verdicts: List[Verdict]): Option[Verdict] =
     verdicts.distinct match
       case List(only) => Some(only)
