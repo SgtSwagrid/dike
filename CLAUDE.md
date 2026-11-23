@@ -16,7 +16,7 @@ This is Dike, a Scala 3 library for ranking items by judging them in pairs, buil
 It is a single JVM module in `com.alecdorrington.dike`. A `Contest` (items, `Anchor`s of known score, round-robin
 `rounds`, and the `Curve` to fall back on) is run by `Contest.rank` with a `Judge[F, A]`, `(A, A) => F[Verdict]`, for
 any `F` with `MonadThrow` and `Parallel`, giving a `Ranking` of `Rating`s, `Contest.presentedFirst` counts the judgements
-sure to present each player first (`Field.certain`: the schedule and each item's first rung, `Field.middle`), and
+sure to present each player first (`Field.certainPairings`: the schedule and each item's first rung, `Field.middle`), and
 `Contest.maxJudgements` prices one before
 it runs (`Field.maxJudgements`: the schedule and each item's longest climb, `Field.longestClimb`, each judged
 `Comparison.sides` times; keep it in step with `Judging` whenever what is judged changes). Internally, a `Field`

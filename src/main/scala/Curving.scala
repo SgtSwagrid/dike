@@ -2,9 +2,8 @@ package com.alecdorrington.dike
 
 /**
   * Normalisation of scores onto a [[Curve]] by rank: a value is ranked among a
-  * sample, and replaced by the score at the same percentile of the curve. Only
-  * the sample's order survives, so values from harsh and generous judges become
-  * comparable.
+  * sample, and replaced by the score at the same percentile of the curve, so
+  * that only the sample's order survives.
   */
 object Curving:
 
@@ -59,8 +58,7 @@ object Curving:
     *   The curve to read the score off.
     *
     * @return
-    *   An unbounded score, to be clamped to the range of its scale if it has
-    *   one.
+    *   An unbounded score, for the host to clamp to its scale.
     */
   def score(percentile: Double, curve: Curve): Double = curve.mean +
     Gaussian.quantile(percentile) * curve.deviation

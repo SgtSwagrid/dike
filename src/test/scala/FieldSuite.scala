@@ -7,11 +7,11 @@ final class FieldSuite extends FunSuite:
 
   test("each anchor is paired with the one scored next above it, if any"):
     assertEquals(
-      field(2, 40, 60, 80).rungs,
+      field(2, 40, 60, 80).rungPairings,
       List((2, 3), (3, 4)),
     )
-    assertEquals(field(2, 40).rungs, Nil)
-    assertEquals(field(2).rungs, Nil)
+    assertEquals(field(2, 40).rungPairings, Nil)
+    assertEquals(field(2).rungPairings, Nil)
 
   test("the anchors stand after the items, up the ladder in score order"):
     assertEquals(

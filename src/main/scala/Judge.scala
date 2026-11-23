@@ -6,8 +6,8 @@ package com.alecdorrington.dike
   * no defence against favouring the first, as a [[Contest]] asks both ways
   * round.
   *
-  * A judge may fail, in `F` or by throwing. Either way that one judgement is
-  * left out of the ranking, and its error reported in [[Ranking.failures]].
+  * A judge may fail, in `F` or by throwing: that one judgement is then left
+  * out, and its error reported in [[Ranking.failures]].
   *
   * @tparam F
   *   The effect each judgement is made in.

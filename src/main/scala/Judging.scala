@@ -4,8 +4,8 @@ import cats.{MonadThrow, Parallel}
 import cats.syntax.all.*
 
 /**
-  * The judging of a [[Contest]], making every judgement in parallel wherever
-  * none waits on another's verdict.
+  * The judging of a [[Contest]], in parallel wherever no judgement waits on
+  * another's verdict.
   */
 private[dike] final class Judging[F[_] : {MonadThrow, Parallel}, A]
   (field: Field[A], judge: Judge[F, A]):
@@ -17,13 +17,12 @@ private[dike] final class Judging[F[_] : {MonadThrow, Parallel}, A]
     .parFlatTraverse(compare(_).map(_.judgements))
 
   private def climbs: F[List[Judgement]] = List
-    .range(0, field.items)
+    .range(0, field.itemCount)
     .parFlatTraverse(climb(_, field.ladder.indices))
 
   /**
-    * Places one item on the ladder by binary search. A drawn or contradictory
-    * verdict ends the climb, as the item is then placed as precisely as the
-    * ladder allows.
+    * Places one item on the ladder by binary search, ending at a draw, a
+    * contradiction or a comparison that failed both ways.
     */
   private def climb(item: Int, rungs: Range): F[List[Judgement]] =
     if rungs.isEmpty then List.empty[Judgement].pure[F]
